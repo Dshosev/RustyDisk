@@ -1,0 +1,57 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        run: cargo build --release
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build binaries
+        run: |
+          cargo build --release --target x86_64-unknown-linux-gnu
+          cargo build --release --target x86_64-pc-windows-msvc
+          cargo build --release --target x86_64-apple-darwin
+
+      - name: Create release artifacts
+        run: |
+          mkdir release
+          cp target/x86_64-unknown-linux-gnu/release/disk_speed_test release/
+          cp target/x86_64-pc-windows-msvc/release/disk_speed_test.exe release/
+          cp target/x86_64-apple-darwin/release/disk_speed_test release/
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: disk_speed_test
+          path: release/
