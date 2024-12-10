@@ -21,7 +21,15 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+<<<<<<< Updated upstream
         
+=======
+
+      - name: Install MSVC target (Windows only)
+        if: runner.os == 'Windows'
+        run: rustup target add x86_64-pc-windows-msvc
+
+>>>>>>> Stashed changes
       - name: Build
         run: cargo build --release
 
