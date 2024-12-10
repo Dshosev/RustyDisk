@@ -21,9 +21,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      
-      - name: Install MSVC target
-        run: rustup target add x86_64-pc-windows-msvc
         
       - name: Build
         run: cargo build --release
@@ -39,6 +36,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Install MSVC target
+        run: rustup target add x86_64-pc-windows-msvc
 
       - name: Build binaries
         run: |
