@@ -33,7 +33,7 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           mkdir -p artifacts
-          cp target/release/* artifacts/
+          cp -r target/release/* artifacts/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
