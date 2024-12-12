@@ -31,7 +31,7 @@ jobs:
           if [[ "${{ matrix.os }}" == 'windows-latest' ]]; then
             cp target/release/*.exe artifacts/
           else
-            cp target/release/${{ github.repository }} artifacts/
+            cp target/release/rustydisk artifacts/
           fi
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -43,11 +43,26 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      - name: Download Linux artifact
+        if: always()
         uses: actions/download-artifact@v3
         with:
-          name: ${{ matrix.os }}-artifact
-          path: artifacts/
+          name: ubuntu-latest-artifact
+          path: artifacts/linux/
+
+      - name: Download macOS artifact
+        if: always()
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-latest-artifact
+          path: artifacts/macos/
+
+      - name: Download Windows artifact
+        if: always()
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-latest-artifact
+          path: artifacts/windows/
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -57,6 +72,9 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
-          assets: artifacts/*
+          assets: |
+            artifacts/linux/*
+            artifacts/macos/*
+            artifacts/windows/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
