@@ -24,14 +24,17 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: Create release artifact
-        if: startsWith(matrix.os, 'windows')
+      - name: Create release artifact (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
           mkdir -p artifacts
           cp target/release/*.exe artifacts/
-        else:
+      - name: Create release artifact (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
           mkdir -p artifacts
           cp target/release/* artifacts/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
