@@ -1,71 +1,62 @@
-name: Build and Release
+name: Rust Build and Release
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Rust
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Install MSVC target (Windows only)
-        if: runner.os == 'Windows'
-        run: rustup target add x86_64-pc-windows-msvc
-
-      - name: Install Visual Studio Build Tools
-        if: runner.os == 'Windows'
-        run: |
-          choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y --no-progress
-      
-      
 
       - name: Build
         run: cargo build --release
 
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Install MSVC target (Windows only)
-        run: rustup target add x86_64-pc-windows-msvc
-
-      - name: Build binaries
+      - name: Create release artifact
+        if: startsWith(matrix.os, 'windows')
         run: |
-          cargo build --release --target x86_64-unknown-linux-gnu
-          cargo build --release --target x86_64-pc-windows-msvc
-          cargo build --release --target x86_64-apple-darwin
-
-      - name: Create release artifacts
-        run: |
-          mkdir release
-          cp target/x86_64-unknown-linux-gnu/release/disk_speed_test release/
-          cp target/x86_64-pc-windows-msvc/release/disk_speed_test.exe release/
-          cp target/x86_64-apple-darwin/release/disk_speed_test release/
-
-      - name: Upload release artifacts
+          mkdir -p artifacts
+          cp target/release/*.exe artifacts/
+        else:
+          mkdir -p artifacts
+          cp target/release/* artifacts/
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: disk_speed_test
-          path: release/
+          name: ${{ matrix.os }}-artifact
+          path: artifacts/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.os }}-artifact
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          assets: |
+            artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
