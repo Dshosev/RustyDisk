@@ -24,17 +24,10 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: Create release artifact (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Create release artifact
         run: |
           mkdir -p artifacts
-          cp target/release/*.exe artifacts/
-      - name: Create release artifact (Unix)
-        if: matrix.os != 'windows-latest'
-        run: |
-          mkdir -p artifacts
-          cp -r target/release/* artifacts/
-
+          cp target/release/* artifacts/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -59,7 +52,6 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
-          assets: |
-            artifacts/*
+          assets: artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
