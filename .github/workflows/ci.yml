@@ -27,7 +27,12 @@ jobs:
       - name: Create release artifact
         run: |
           mkdir -p artifacts
-          cp target/release/* artifacts/
+          # Kopiere nur die kompilierten Binärdateien
+          if [[ "${{ matrix.os }}" == 'windows-latest' ]]; then
+            cp target/release/*.exe artifacts/
+          else
+            cp target/release/${{ github.repository }} artifacts/
+          fi
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
